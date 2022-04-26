@@ -1,0 +1,70 @@
+import 'module-alias/register';
+
+import express from 'express';
+import { ApolloServer } from 'apollo-server-express';
+import { MikroORM } from '@mikro-orm/core';
+import { buildSchema } from 'type-graphql';
+
+import { createClient } from 'redis';
+import connectRedis from 'connect-redis';
+import session from 'express-session';
+
+import microConfig from '@config';
+import { resolvers } from '@resolvers';
+import { isProd } from '@utils';
+import { MyContext } from '@types';
+
+const main = async () => {
+    const orm = await MikroORM.init(microConfig);
+    await orm.getMigrator().up();
+
+    const app = express();
+
+    app.set('trust proxy', !isProd);
+
+    const redisClient = createClient({ legacyMode: true });
+    const redisStore = connectRedis(session);
+    redisClient.connect().catch(console.error);
+
+    app.use(
+        session({
+            name: 'booocain',
+            store: new redisStore({ client: redisClient, disableTouch: true }),
+            cookie: {
+                maxAge: 1000 * 60 * 60 * 24 * 365 * 10,
+                httpOnly: true,
+                sameSite: 'none',
+                secure: true,
+            },
+            saveUninitialized: false,
+            secret: 'keyboard cat',
+            resave: false,
+        })
+    );
+
+    app.get('/', (_, res) => {
+        res.send('Hello');
+    });
+
+    const apolloServer = new ApolloServer({
+        schema: await buildSchema({
+            resolvers,
+            validate: false,
+        }),
+        context: ({ req, res }: MyContext) => ({ em: orm.em, req, res }),
+    });
+
+    await apolloServer.start();
+    apolloServer.applyMiddleware({
+        app,
+        cors: { credentials: true, origin: 'https://studio.apollographql.com' },
+    });
+
+    app.listen(4000, () => {
+        console.log('Server started on localhost:4000');
+    });
+};
+
+main().catch((err) => {
+    console.error(err);
+});
