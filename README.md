@@ -1,1 +1,1 @@
-# reddit-fullstack
+# reddit-server
