@@ -8,6 +8,7 @@ import { buildSchema } from 'type-graphql';
 import { createClient } from 'redis';
 import connectRedis from 'connect-redis';
 import session from 'express-session';
+import cors from 'cors';
 
 import microConfig from '@config';
 import { resolvers } from '@resolvers';
@@ -25,6 +26,30 @@ const main = async () => {
     const redisClient = createClient({ legacyMode: true });
     const redisStore = connectRedis(session);
     redisClient.connect().catch(console.error);
+    const whitelist = [
+        'http://localhost:3000',
+        'http://localhost:4000/graphql',
+        'https://studio.apollographql.com',
+    ];
+
+    app.use(
+        cors({
+            origin: function (origin, callback) {
+                if (!origin) {
+                    callback(null, true);
+
+                    return
+                }
+
+                if (origin && whitelist.indexOf(origin) !== -1) {
+                    callback(null, true);
+                } else {
+                    callback(new Error('Not allowed by CORS'));
+                }
+            },
+            credentials: true,
+        })
+    );
 
     app.use(
         session({
@@ -57,7 +82,7 @@ const main = async () => {
     await apolloServer.start();
     apolloServer.applyMiddleware({
         app,
-        cors: { credentials: true, origin: 'https://studio.apollographql.com' },
+        cors: false,
     });
 
     app.listen(4000, () => {
