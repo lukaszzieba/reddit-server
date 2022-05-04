@@ -56,37 +56,53 @@ export class UserResolver {
     ): Promise<UserResponse> {
         if (!username?.length) {
             return {
-                errors: [{ field: 'username', message: 'user cant be mepty' }],
+                errors: [
+                    { field: 'username', message: 'User can not be empty' },
+                ],
             };
         }
 
         if (!plainTextPassword?.length) {
             return {
-                errors: [{ field: 'pawwwor', message: 'user cant be empty' }],
+                errors: [
+                    { field: 'password', message: 'Password can not be empty' },
+                ],
             };
         }
 
         const password = await argon2.hash(plainTextPassword);
 
         try {
+            // const user = (em as EntityManager)
+            //     .createQueryBuilder(User)
+            //     .getKnexQuery()
+            //     .insert({
+            //         username,
+            //         password,
+            //         created_at: new Date(),
+            //         updated_at: new Date(),
+            //     })
+            //     .returning('*');
             const user = em.create(User, { username, password });
             await em.persistAndFlush(user);
 
+            console.log('CREATE SESSION', user.id);
+
             req.session.userId = user.id;
+
+            console.log(req.session);
 
             return { user };
         } catch (error) {
-            console.error(error);
-
             if (error?.code === '23505') {
                 return {
                     errors: [
-                        { field: 'username', message: 'useer already exist' },
+                        { field: 'username', message: 'User already exist' },
                     ],
                 };
             }
 
-            return { errors: [{ field: 'unkown', message: 'unknown' }] };
+            return { errors: [{ field: 'unknown', message: 'unknown' }] };
         }
     }
 
