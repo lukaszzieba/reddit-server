@@ -14,6 +14,7 @@ import microConfig from '@config';
 import { resolvers } from '@resolvers';
 import { isProd } from '@utils';
 import { MyContext } from '@types';
+import { COOKIE_NAME } from '@utils/constants';
 
 const main = async () => {
     const orm = await MikroORM.init(microConfig);
@@ -38,7 +39,7 @@ const main = async () => {
                 if (!origin) {
                     callback(null, true);
 
-                    return
+                    return;
                 }
 
                 if (origin && whitelist.indexOf(origin) !== -1) {
@@ -53,7 +54,7 @@ const main = async () => {
 
     app.use(
         session({
-            name: 'booocain',
+            name: COOKIE_NAME,
             store: new redisStore({ client: redisClient, disableTouch: true }),
             cookie: {
                 maxAge: 1000 * 60 * 60 * 24 * 365 * 10,
