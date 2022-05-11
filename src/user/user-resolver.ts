@@ -25,7 +25,10 @@ import {
     findByUsernameOrEmail,
     findById,
 } from '@user/user-service';
-import { createErrorMessage } from '@user/user-error-messages';
+import {
+    createErrorMessage,
+    dbDuplicationError,
+} from '@user/user-error-messages';
 
 @InputType()
 class RegisterInput {
@@ -101,7 +104,7 @@ export class UserResolver {
         } catch (error) {
             console.error(error);
             if (error?.code === '23505') {
-                return createErrorMessage('ALREADY_EXIST');
+                return { errors: dbDuplicationError(error) };
             }
             return createErrorMessage('UNKNOWN');
         }
@@ -117,8 +120,6 @@ export class UserResolver {
             usernameOrEmail,
             password,
         });
-
-        console.log(loginDataError);
 
         if (loginDataError) {
             return { errors: errorMap(loginDataError) };

@@ -26,6 +26,6 @@ export class User {
     @Property({ type: 'text', unique: true })
     email!: string;
 
-    @Property({ type: 'text' })
+    @Property({ type: 'text', unique: true })
     password!: string;
 }
