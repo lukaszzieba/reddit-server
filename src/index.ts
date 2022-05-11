@@ -11,10 +11,13 @@ import session from 'express-session';
 import cors from 'cors';
 
 import microConfig from '@config';
-import { resolvers } from '@resolvers';
 import { isProd } from '@utils';
 import { MyContext } from '@types';
 import { COOKIE_NAME } from '@utils/constants';
+
+import { User, UserResolver } from '@user';
+import { PostResolver } from '@post';
+import { RequestContext } from '@mikro-orm/core';
 
 const main = async () => {
     const orm = await MikroORM.init(microConfig);
@@ -68,13 +71,17 @@ const main = async () => {
         })
     );
 
+    app.use((req, res, next) => {
+        RequestContext.create(orm.em, next);
+    });
+
     app.get('/', (_, res) => {
         res.send('Hello');
     });
 
     const apolloServer = new ApolloServer({
         schema: await buildSchema({
-            resolvers,
+            resolvers: [PostResolver, UserResolver],
             validate: false,
         }),
         context: ({ req, res }: MyContext) => ({ em: orm.em, req, res }),

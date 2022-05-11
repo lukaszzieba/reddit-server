@@ -9,14 +9,40 @@ import {
     Resolver,
 } from 'type-graphql';
 import argon2 from 'argon2';
+
 import { MyContext } from '@types';
-import { User } from '@entities';
 import { COOKIE_NAME } from '@utils/constants';
+import { errorMap } from '@utils/errorMap';
+
+import { User } from '@user';
+import {
+    emailSchema,
+    loginSchema,
+    registerSchema,
+} from '@user/user-validation';
+import {
+    createUser,
+    findByUsernameOrEmail,
+    findById,
+} from '@user/user-service';
+import { createErrorMessage } from '@user/user-error-messages';
 
 @InputType()
-class UserInput {
+class RegisterInput {
     @Field()
     username: string;
+
+    @Field()
+    email: string;
+
+    @Field()
+    password: string;
+}
+
+@InputType()
+class LoginInput {
+    @Field()
+    usernameOrEmail: string;
 
     @Field()
     password: string;
@@ -46,89 +72,74 @@ export class UserResolver {
     async me(@Ctx() { em, req }: MyContext) {
         if (!req.session.userId) return null;
 
-        return await em.findOne(User, { id: req.session.userId });
+        return await findById(req.session.userId);
     }
 
     @Mutation(() => UserResponse)
     async register(
         @Arg('registerInput')
-        { username, password: plainTextPassword }: UserInput,
+        { username, password: plainTextPassword, email }: RegisterInput,
         @Ctx() { em, req }: MyContext
     ): Promise<UserResponse> {
-        if (!username?.length) {
-            return {
-                errors: [
-                    { field: 'username', message: 'User can not be empty' },
-                ],
-            };
-        }
+        const { error } = registerSchema.validate({
+            username,
+            password: plainTextPassword,
+            email,
+        });
 
-        if (!plainTextPassword?.length) {
-            return {
-                errors: [
-                    { field: 'password', message: 'Password can not be empty' },
-                ],
-            };
+        if (error) {
+            return { errors: errorMap(error) };
         }
 
         const password = await argon2.hash(plainTextPassword);
 
         try {
-            // const user = (em as EntityManager)
-            //     .createQueryBuilder(User)
-            //     .getKnexQuery()
-            //     .insert({
-            //         username,
-            //         password,
-            //         created_at: new Date(),
-            //         updated_at: new Date(),
-            //     })
-            //     .returning('*');
-            const user = em.create(User, { username, password });
-            await em.persistAndFlush(user);
-
-            console.log('CREATE SESSION', user.id);
-
+            const user = await createUser(username, password, email);
             req.session.userId = user.id;
-
-            console.log(req.session);
 
             return { user };
         } catch (error) {
+            console.error(error);
             if (error?.code === '23505') {
-                return {
-                    errors: [
-                        { field: 'username', message: 'User already exist' },
-                    ],
-                };
+                return createErrorMessage('ALREADY_EXIST');
             }
-
-            return { errors: [{ field: 'unknown', message: 'unknown' }] };
+            return createErrorMessage('UNKNOWN');
         }
     }
 
     @Mutation(() => UserResponse)
     async login(
         @Arg('loginInput')
-        { username, password }: UserInput,
+        { usernameOrEmail, password }: LoginInput,
         @Ctx() { em, req }: MyContext
     ): Promise<UserResponse> {
-        const user = await em.findOne(User, { username });
+        const { error: loginDataError } = loginSchema.validate({
+            usernameOrEmail,
+            password,
+        });
+
+        console.log(loginDataError);
+
+        if (loginDataError) {
+            return { errors: errorMap(loginDataError) };
+        }
+
+        const { error: emailError } = emailSchema.validate(usernameOrEmail);
+
+        const query = emailError
+            ? { username: usernameOrEmail }
+            : { email: usernameOrEmail };
+
+        const user = await findByUsernameOrEmail(query);
 
         if (!user) {
-            return {
-                errors: [{ field: 'username', message: 'user not fouund' }],
-            };
+            return createErrorMessage('NOT_FOUND');
         }
 
         if (user) {
             const passwordValid = await argon2.verify(user?.password, password);
             if (!passwordValid) {
-                return {
-                    errors: [
-                        { field: 'password', message: 'password invalid' },
-                    ],
-                };
+                return createErrorMessage('INVALID_PASSWORD');
             }
         }
 

@@ -2,8 +2,8 @@ import path from 'path';
 import { MikroORM } from '@mikro-orm/core';
 
 import { isProd } from '@utils';
-
-import { Post, User } from '@entities';
+import { Post } from '@post';
+import { User } from '@user';
 
 export default {
     migrations: {
