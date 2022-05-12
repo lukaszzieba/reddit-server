@@ -5,13 +5,13 @@ import { ApolloServer } from 'apollo-server-express';
 import { MikroORM } from '@mikro-orm/core';
 import { buildSchema } from 'type-graphql';
 
-import { createClient } from 'redis';
+import Redis from 'ioredis';
 import connectRedis from 'connect-redis';
 import session from 'express-session';
 import cors from 'cors';
 
 import microConfig from '@config';
-import { isProd } from '@utils';
+import { isProd, sendMail } from '@utils';
 import { MyContext } from '@types';
 import { COOKIE_NAME } from '@utils/constants';
 
@@ -27,9 +27,9 @@ const main = async () => {
 
     app.set('trust proxy', !isProd);
 
-    const redisClient = createClient({ legacyMode: true });
+    const redis = new Redis();
     const redisStore = connectRedis(session);
-    redisClient.connect().catch(console.error);
+
     const whitelist = [
         'http://localhost:3000',
         'http://localhost:4000/graphql',
@@ -58,7 +58,7 @@ const main = async () => {
     app.use(
         session({
             name: COOKIE_NAME,
-            store: new redisStore({ client: redisClient, disableTouch: true }),
+            store: new redisStore({ client: redis, disableTouch: true }),
             cookie: {
                 maxAge: 1000 * 60 * 60 * 24 * 365 * 10,
                 httpOnly: true,
@@ -84,7 +84,7 @@ const main = async () => {
             resolvers: [PostResolver, UserResolver],
             validate: false,
         }),
-        context: ({ req, res }: MyContext) => ({ em: orm.em, req, res }),
+        context: ({ req, res }: MyContext) => ({ em: orm.em, req, res, redis }),
     });
 
     await apolloServer.start();

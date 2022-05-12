@@ -9,9 +9,10 @@ import {
     Resolver,
 } from 'type-graphql';
 import argon2 from 'argon2';
+import { v4 } from 'uuid';
 
 import { MyContext } from '@types';
-import { COOKIE_NAME } from '@utils/constants';
+import { COOKIE_NAME, FORGOT_PASSWORD_PREFIX } from '@utils/constants';
 import { errorMap } from '@utils/errorMap';
 
 import { User } from '@user';
@@ -24,11 +25,14 @@ import {
     createUser,
     findByUsernameOrEmail,
     findById,
+    setNewPassword,
 } from '@user/user-service';
 import {
     createErrorMessage,
     dbDuplicationError,
+    forgotPasswordUserNotFound,
 } from '@user/user-error-messages';
+import { sendMail } from '@utils';
 
 @InputType()
 class RegisterInput {
@@ -49,6 +53,18 @@ class LoginInput {
 
     @Field()
     password: string;
+}
+
+@InputType()
+class ResetPasswordInput {
+    @Field()
+    token: string;
+
+    @Field()
+    newPassword: string;
+
+    @Field()
+    newPasswordRepeat: string;
 }
 
 @ObjectType()
@@ -162,5 +178,58 @@ export class UserResolver {
                 resolve(true);
             });
         });
+    }
+
+    @Mutation(() => Boolean)
+    async forgotPassword(
+        @Arg('email') email: string,
+        @Ctx() { redis }: MyContext
+    ) {
+        const user = await findByUsernameOrEmail({ email });
+        if (!user) {
+            return false;
+        }
+
+        const token = v4();
+        await redis.set(FORGOT_PASSWORD_PREFIX + token, user.id);
+
+        await sendMail(
+            user.email,
+            `<a href="http://localhost:3000/reset-password/${token}">Reset password</a>`
+        );
+
+        return true;
+    }
+
+    @Mutation(() => Boolean)
+    async resetPassword(
+        @Arg('resetPasswordInput')
+        { token, newPassword, newPasswordRepeat }: ResetPasswordInput,
+        @Ctx() { redis }: MyContext
+    ) {
+        const userId = await redis.get(FORGOT_PASSWORD_PREFIX + token);
+        if (!userId) {
+            // TODO
+            // throw some error
+            return false;
+        }
+
+        const passwordsMatch = newPassword === newPasswordRepeat;
+        if (!passwordsMatch) {
+            // TODO
+            // throw some error
+            return false;
+        }
+
+        try {
+            const hashedNewPassword = await argon2.hash(newPassword);
+            await setNewPassword(+userId, hashedNewPassword);
+
+            return true;
+        } catch (e) {
+            console.error(e);
+
+            return false;
+        }
     }
 }

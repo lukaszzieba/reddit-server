@@ -37,3 +37,13 @@ export const createUser = async (
 
     throw new Error('Entity manager is missing');
 };
+
+export const setNewPassword = async (userId: number, password: string) => {
+    const em = RequestContext.getEntityManager();
+
+    if (em) {
+        return await em.nativeUpdate(User, { id: userId }, { password });
+    }
+
+    throw new Error('Entity manager is missing');
+};

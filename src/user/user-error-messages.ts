@@ -14,6 +14,7 @@ const ErrorTypeMap: {
     UNKNOWN: {
         errors: [{ field: 'unknown', message: 'unknown' }],
     },
+
 };
 
 export const createErrorMessage = (errorType: ErrorType) =>
@@ -31,4 +32,7 @@ export const dbDuplicationError = (error: { detail: string }) => {
     }
 
     return errors;
+};
+export const forgotPasswordUserNotFound = () => {
+    return { errors: [{ field: 'email', message: 'User des not exist' }] };
 };
