@@ -1,24 +1,42 @@
-import { Entity, OptionalProps, PrimaryKey, Property } from '@mikro-orm/core';
+import {
+    BaseEntity,
+    Entity,
+    PrimaryGeneratedColumn,
+    Column,
+    CreateDateColumn,
+    UpdateDateColumn,
+    ManyToOne,
+} from 'typeorm';
 import { Field, Int, ObjectType } from 'type-graphql';
+import { User } from '@user';
 
 @ObjectType()
 @Entity()
-export class Post {
-    [OptionalProps]?: 'createdAt' | 'updatedAt';
-
+export class Post extends BaseEntity {
     @Field(() => Int)
-    @PrimaryKey()
+    @PrimaryGeneratedColumn()
     id!: number;
 
-    @Field(() => String)
-    @Property({ type: 'date', default: 'now' })
-    createdAt!: Date;
+    @ManyToOne(() => User, (user) => user.posts)
+    user: User;
 
     @Field(() => String)
-    @Property({ type: 'date', onUpdate: () => new Date(), default: 'now' })
-    updatedAt!: Date;
-
-    @Field(() => String)
-    @Property({ type: 'text' })
+    @Column()
     title!: string;
+
+    @Field(() => String)
+    @CreateDateColumn()
+    createdAt: Date;
+
+    @Field(() => String)
+    @Column()
+    text!: string;
+
+    @Field(() => String)
+    @Column({ default: 0 })
+    points!: string;
+
+    @Field(() => String)
+    @UpdateDateColumn()
+    updatedAt!: Date;
 }

@@ -1,47 +1,53 @@
-import { Arg, Ctx, Mutation, Query, Resolver } from 'type-graphql';
-import { MyContext } from '@types';
+import {
+    Arg,
+    Ctx,
+    Mutation,
+    Query,
+    Resolver,
+    UseMiddleware,
+} from 'type-graphql';
 import { Post } from '@post';
+import { PostService } from '@post/post-service';
+import { isAuth } from '../middleware/isAuth';
+import { MyContext } from '@types';
+import { findById } from '@user/user-service';
+import { User } from '@user';
 
 @Resolver()
 export class PostResolver {
     @Query(() => [Post])
-    posts(@Ctx() { em }: MyContext) {
-        return em.find(Post, {});
+    async posts() {
+        return await PostService.getAll();
     }
 
     @Query(() => Post, { nullable: true })
-    post(@Arg('id') id: number, @Ctx() { em }: MyContext) {
-        return em.findOne(Post, { id });
+    async post(@Arg('id') id: number) {
+        return await PostService.getOneById(id);
     }
 
     @Mutation(() => Post)
-    async createPost(@Arg('title') title: string, @Ctx() { em }: MyContext) {
-        const post = em.create(Post, { title });
-        await em.persistAndFlush(post);
-        return post;
+    @UseMiddleware(isAuth)
+    async createPost(
+        @Arg('title') title: string,
+        @Arg('text') text: string,
+        @Ctx() { req }: MyContext
+    ) {
+        const user = await findById(req.session.userId as number);
+        return await PostService.create(title, text, user as User);
     }
 
     @Mutation(() => Post, { nullable: true })
     async updatePOst(
         @Arg('id') id: number,
         @Arg('title', () => String, { nullable: true }) title: string,
-        @Ctx() { em }: MyContext
+        @Arg('text', () => String, { nullable: true }) text: string
     ) {
-        const post = await em.findOne(Post, { id });
-        if (!post) {
-            return null;
-        }
-        if (typeof title !== 'undefined') {
-            post.title = title;
-            await em.persistAndFlush(post);
-        }
-
-        return post;
+        return await PostService.update(id, title, text);
     }
 
     @Mutation(() => Boolean)
-    async deletePost(@Arg('id') id: number, @Ctx() { em }: MyContext) {
-        em.nativeDelete(Post, { id });
+    async deletePost(@Arg('id') id: number) {
+        await PostService.remove(id);
 
         return true;
     }

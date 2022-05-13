@@ -30,7 +30,6 @@ import {
 import {
     createErrorMessage,
     dbDuplicationError,
-    forgotPasswordUserNotFound,
 } from '@user/user-error-messages';
 import { sendMail } from '@utils';
 
@@ -88,7 +87,7 @@ class UserResponse {
 @Resolver()
 export class UserResolver {
     @Query(() => User, { nullable: true })
-    async me(@Ctx() { em, req }: MyContext) {
+    async me(@Ctx() { req }: MyContext) {
         if (!req.session.userId) return null;
 
         return await findById(req.session.userId);
@@ -98,7 +97,7 @@ export class UserResolver {
     async register(
         @Arg('registerInput')
         { username, password: plainTextPassword, email }: RegisterInput,
-        @Ctx() { em, req }: MyContext
+        @Ctx() { req }: MyContext
     ): Promise<UserResponse> {
         const { error } = registerSchema.validate({
             username,
@@ -114,7 +113,6 @@ export class UserResolver {
 
         try {
             const user = await createUser(username, password, email);
-            req.session.userId = user.id;
 
             return { user };
         } catch (error) {
@@ -130,7 +128,7 @@ export class UserResolver {
     async login(
         @Arg('loginInput')
         { usernameOrEmail, password }: LoginInput,
-        @Ctx() { em, req }: MyContext
+        @Ctx() { req }: MyContext
     ): Promise<UserResponse> {
         const { error: loginDataError } = loginSchema.validate({
             usernameOrEmail,
@@ -166,7 +164,7 @@ export class UserResolver {
     }
 
     @Mutation(() => Boolean)
-    async logout(@Ctx() { em, req, res }: MyContext) {
+    async logout(@Ctx() { req, res }: MyContext) {
         return new Promise((resolve) => {
             res.clearCookie(COOKIE_NAME);
             req.session.destroy((err) => {

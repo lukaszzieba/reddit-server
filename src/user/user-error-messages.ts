@@ -33,6 +33,3 @@ export const dbDuplicationError = (error: { detail: string }) => {
 
     return errors;
 };
-export const forgotPasswordUserNotFound = () => {
-    return { errors: [{ field: 'email', message: 'User des not exist' }] };
-};

@@ -2,7 +2,6 @@ import 'module-alias/register';
 
 import express from 'express';
 import { ApolloServer } from 'apollo-server-express';
-import { MikroORM } from '@mikro-orm/core';
 import { buildSchema } from 'type-graphql';
 
 import Redis from 'ioredis';
@@ -10,19 +9,16 @@ import connectRedis from 'connect-redis';
 import session from 'express-session';
 import cors from 'cors';
 
-import microConfig from '@config';
-import { isProd, sendMail } from '@utils';
+import { isProd } from '@utils';
 import { MyContext } from '@types';
 import { COOKIE_NAME } from '@utils/constants';
 
-import { User, UserResolver } from '@user';
+import { UserResolver } from '@user';
 import { PostResolver } from '@post';
-import { RequestContext } from '@mikro-orm/core';
+import { AppDataSource } from './dataSource';
 
 const main = async () => {
-    const orm = await MikroORM.init(microConfig);
-    await orm.getMigrator().up();
-
+    await AppDataSource.initialize();
     const app = express();
 
     app.set('trust proxy', !isProd);
@@ -71,10 +67,6 @@ const main = async () => {
         })
     );
 
-    app.use((req, res, next) => {
-        RequestContext.create(orm.em, next);
-    });
-
     app.get('/', (_, res) => {
         res.send('Hello');
     });
@@ -84,7 +76,7 @@ const main = async () => {
             resolvers: [PostResolver, UserResolver],
             validate: false,
         }),
-        context: ({ req, res }: MyContext) => ({ em: orm.em, req, res, redis }),
+        context: ({ req, res }: MyContext) => ({ req, res, redis }),
     });
 
     await apolloServer.start();
