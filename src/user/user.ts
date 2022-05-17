@@ -8,7 +8,8 @@ import {
     OneToMany,
 } from 'typeorm';
 import { Field, Int, ObjectType } from 'type-graphql';
-import { Post } from '@post';
+// PATH must look like @post/post
+import { Post } from '@post/post';
 
 @ObjectType()
 @Entity()

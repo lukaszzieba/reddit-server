@@ -15,10 +15,11 @@ import { COOKIE_NAME } from '@utils/constants';
 
 import { UserResolver } from '@user';
 import { PostResolver } from '@post';
-import { AppDataSource } from './dataSource';
+import { dataSource } from './dataSource';
 
 const main = async () => {
-    await AppDataSource.initialize();
+    await dataSource.initialize();
+
     const app = express();
 
     app.set('trust proxy', !isProd);

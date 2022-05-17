@@ -1,8 +1,19 @@
-import { Post } from '@post/post';
+import { Post } from '@post';
 import { User } from '@user';
+import { getQueryBuilder } from '../dataSource';
 
-const getAll = () => {
-    return Post.find();
+const getPosts = (limit: number, cursor: string) => {
+    const query = getQueryBuilder(Post, 'post')
+        .orderBy('"createdAt"', 'DESC')
+        .take(limit);
+
+    if (cursor) {
+        query.where('"createdAt" < :cursor', {
+            cursor: new Date(parseInt(cursor)),
+        });
+    }
+
+    return query.getMany();
 };
 
 const getOneById = (id: number) => {
@@ -22,7 +33,7 @@ const remove = (id: number) => {
 };
 
 export const PostService = {
-    getAll,
+    getPosts,
     getOneById,
     create,
     update,

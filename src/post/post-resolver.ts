@@ -1,6 +1,7 @@
 import {
     Arg,
     Ctx,
+    Int,
     Mutation,
     Query,
     Resolver,
@@ -16,8 +17,12 @@ import { User } from '@user';
 @Resolver()
 export class PostResolver {
     @Query(() => [Post])
-    async posts() {
-        return await PostService.getAll();
+    async posts(
+        @Arg('limit', () => Int) limit: number,
+        @Arg('cursor', () => String, { nullable: true }) cursor: string
+    ) {
+        const realLimit = Math.min(50, limit);
+        return await PostService.getPosts(realLimit, cursor);
     }
 
     @Query(() => Post, { nullable: true })
