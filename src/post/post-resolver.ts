@@ -1,8 +1,10 @@
 import {
     Arg,
     Ctx,
+    Field,
     Int,
     Mutation,
+    ObjectType,
     Query,
     Resolver,
     UseMiddleware,
@@ -14,15 +16,29 @@ import { MyContext } from '@types';
 import { findById } from '@user/user-service';
 import { User } from '@user';
 
+@ObjectType()
+class PaginationPosts {
+    @Field(() => [Post])
+    posts: Post[];
+
+    @Field(() => Boolean)
+    hashMore: boolean;
+}
+
 @Resolver()
 export class PostResolver {
-    @Query(() => [Post])
+    @Query(() => PaginationPosts)
     async posts(
         @Arg('limit', () => Int) limit: number,
         @Arg('cursor', () => String, { nullable: true }) cursor: string
     ) {
         const realLimit = Math.min(50, limit);
-        return await PostService.getPosts(realLimit, cursor);
+        const posts = await PostService.getPosts(realLimit + 1, cursor);
+
+        return {
+            posts: posts.slice(0, realLimit),
+            hashMore: posts.length > realLimit,
+        };
     }
 
     @Query(() => Post, { nullable: true })
