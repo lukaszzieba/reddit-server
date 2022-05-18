@@ -20,3 +20,5 @@ export const getQueryBuilder = <T extends EntityTarget<any>>(
     entity: T,
     alias?: string
 ) => dataSource.getRepository<T>(entity).createQueryBuilder(alias);
+
+// export const getQuery = dataSource.query;

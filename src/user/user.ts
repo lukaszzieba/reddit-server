@@ -7,7 +7,7 @@ import {
     UpdateDateColumn,
     OneToMany,
 } from 'typeorm';
-import { Field, Int, ObjectType } from 'type-graphql';
+import {Field, Int, ObjectType} from 'type-graphql';
 // PATH must look like @post/post
 import { Post } from '@post/post';
 
