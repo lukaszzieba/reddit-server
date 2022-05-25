@@ -1,0 +1,1 @@
+export { Updoot } from './updoot';

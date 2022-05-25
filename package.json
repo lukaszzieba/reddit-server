@@ -8,7 +8,7 @@
         "dev": "nodemon dist/index.js",
         "dev2": "ts-node -r tsconfig-paths/register src/index.ts",
         "start": "node dist/index.js",
-        "typeorm": "ts-node -r tsconfig-paths/register ./node_modules/.bin/typeorm"
+        "typeorm": "ts-node -r tsconfig-paths/register ./node_modules//typeorm/cli"
     },
     "keywords": [],
     "author": "",
@@ -47,11 +47,15 @@
     },
     "_moduleAliases": {
         "@root": ".",
-        "@post": "./dist/post",
-        "@user": "./dist/user",
-        "@migrations": "./dist/migrations",
-        "@types": "./dist/types",
-        "@config": "./dist/config",
-        "@utils": "./dist/utils"
+        "@user": "dist/user",
+        "@user/*": "dist/user/*",
+        "@updoot": "dist/updoot",
+        "@updoot/*": "dist/updoot/*",
+        "@post": "dist/post",
+        "@post/*": "dist/post/*",
+        "@migrations": "dist/migrations",
+        "@types": "dist/types",
+        "@config": "dist/config",
+        "@utils": "dist/utils"
     }
 }

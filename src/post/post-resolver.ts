@@ -15,6 +15,7 @@ import { isAuth } from '../middleware/isAuth';
 import { MyContext } from '@types';
 import { findById } from '@user/user-service';
 import { User } from '@user';
+import { UpdootService } from '@updoot/updoot-service';
 
 @ObjectType()
 class PaginationPosts {
@@ -71,5 +72,21 @@ export class PostResolver {
         await PostService.remove(id);
 
         return true;
+    }
+
+    @Mutation(() => Boolean)
+    @UseMiddleware(isAuth)
+    async vote(
+        @Arg('postId', () => Int) postId: number,
+        @Arg('value', () => Int) value: number,
+        @Ctx() { req }: MyContext
+    ) {
+        const isUp = value !== -1;
+        const realVale = isUp ? 1 : -1;
+        const { userId } = req.session;
+
+        await PostService.upVote(realVale, postId, userId as number);
+
+        return true
     }
 }

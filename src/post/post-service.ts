@@ -1,6 +1,6 @@
 import { Post } from '@post';
 import { User } from '@user';
-import { dataSource, getQueryBuilder } from '../dataSource';
+import { dataSource } from '../dataSource';
 
 const getPosts = async (limit: number, cursor: string) => {
     let parameters: any = [limit];
@@ -19,22 +19,23 @@ const getPosts = async (limit: number, cursor: string) => {
     `,
         parameters
     );
+};
 
-    // const query = getQueryBuilder(Post, 'post')
-    //     .innerJoinAndSelect(
-    //         'post.user',s
-    //         'user',
-    //         'user.id = post.user',
-    //     )
-    //     .take(limit);
-    //
-    // if (cursor) {
-    //     query.where('"createdAt" < :cursor', {
-    //         cursor: new Date(parseInt(cursor)),
-    //     });
-    // }
-    //
-    // return query.getMany();
+const upVote = async (value: number, postId: number, userId: number) => {
+    return await dataSource.query(
+        `
+          START TRANSACTION;
+          
+          INSERT INTO updoot ("value", "postId", "userId")
+          values (${value}, ${postId}, ${userId});
+          
+          update post 
+          set points = points + ${value}
+          where id = ${postId};
+          
+          COMMIT;
+        `
+    );
 };
 
 const getOneById = (id: number) => {
@@ -55,6 +56,7 @@ const remove = (id: number) => {
 
 export const PostService = {
     getPosts,
+    upVote,
     getOneById,
     create,
     update,

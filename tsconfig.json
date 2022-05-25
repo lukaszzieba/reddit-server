@@ -27,6 +27,8 @@
             "@post/*": ["src/post/*"],
             "@user": ["src/user"],
             "@user/*": ["src/user/*"],
+            "@updoot": ["src/updoot"],
+            "@updoot/*": ["src/updoot/*"],
             "@migrations": ["src/migrations"],
             "@migrations/*": ["src/migrations/*"],
             "@types": ["src/types"],

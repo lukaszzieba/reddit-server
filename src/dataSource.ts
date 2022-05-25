@@ -3,6 +3,7 @@ import { DataSource, EntityTarget } from 'typeorm';
 import { User } from '@user';
 import { Post } from '@post';
 import path from 'path';
+import { Updoot } from './updoot/updoot';
 
 export const dataSource = new DataSource({
     type: 'postgres',
@@ -11,7 +12,7 @@ export const dataSource = new DataSource({
     database: 'reddit',
     synchronize: true,
     logging: true,
-    entities: [Post, User],
+    entities: [Post, User, Updoot],
     migrationsTableName: 'migrations',
     migrations: [path.join(__dirname, './migrations/*')],
 });
