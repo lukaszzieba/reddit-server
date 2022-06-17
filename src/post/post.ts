@@ -19,6 +19,9 @@ export class Post extends BaseEntity {
     @PrimaryGeneratedColumn()
     id!: number;
 
+    @Field(() => Int, { nullable: true })
+    voteStatus: number | null;
+
     @Field(() => User!)
     @ManyToOne(() => User, (user) => user.posts)
     user: User;

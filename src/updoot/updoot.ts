@@ -4,6 +4,8 @@ import {
     ManyToOne,
     PrimaryGeneratedColumn,
     Column,
+    PrimaryColumn,
+    Unique,
 } from 'typeorm';
 import { User } from '@user/user';
 import { Post } from '@post/post';
@@ -15,6 +17,7 @@ import { Post } from '@post/post';
 // user -> updoot <- posts
 
 @Entity()
+@Unique('customerVote', ['postId', 'userId'])
 export class Updoot extends BaseEntity {
     @PrimaryGeneratedColumn()
     id!: number;
@@ -22,13 +25,13 @@ export class Updoot extends BaseEntity {
     @Column({ type: 'int' })
     value!: number;
 
-    @Column({ type: 'int' })
+    @PrimaryColumn()
     userId!: number;
 
     @ManyToOne(() => User, (user) => user.updoots)
     user!: User;
 
-    @Column({ type: 'int' })
+    @PrimaryColumn()
     postId!: number;
 
     @ManyToOne(() => Post, (post) => post.updoots)

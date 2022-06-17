@@ -2,11 +2,13 @@ import {
     Arg,
     Ctx,
     Field,
+    FieldResolver,
     Int,
     Mutation,
     ObjectType,
     Query,
     Resolver,
+    Root,
     UseMiddleware,
 } from 'type-graphql';
 import { Post } from '@post';
@@ -26,15 +28,25 @@ class PaginationPosts {
     hashMore: boolean;
 }
 
-@Resolver()
+@Resolver(Post)
 export class PostResolver {
+    @FieldResolver(() => String!)
+    textSnippet(@Root() post: Post) {
+        return post.text.slice(0, 50);
+    }
+
     @Query(() => PaginationPosts)
     async posts(
         @Arg('limit', () => Int) limit: number,
-        @Arg('cursor', () => String, { nullable: true }) cursor: string
+        @Arg('cursor', () => String, { nullable: true }) cursor: string,
+        @Ctx() { req }: MyContext
     ) {
         const realLimit = Math.min(50, limit);
-        const posts = await PostService.getPosts(realLimit + 1, cursor);
+        const posts = await PostService.getPosts(
+            realLimit + 1,
+            cursor,
+            req.session.userId
+        );
 
         return {
             posts: posts.slice(0, realLimit),
@@ -85,8 +97,12 @@ export class PostResolver {
         const realVale = isUp ? 1 : -1;
         const { userId } = req.session;
 
-        await PostService.upVote(realVale, postId, userId as number);
+        const result = await PostService.upVote(
+            realVale,
+            postId,
+            userId as number
+        );
 
-        return true
+        return true;
     }
 }
