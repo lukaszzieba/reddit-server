@@ -11,7 +11,7 @@ export const dataSource = new DataSource({
     port: 5432,
     database: 'reddit',
     synchronize: true,
-    logging: true,
+    logging: false,
     entities: [Post, User, Updoot],
     migrationsTableName: 'migrations',
     migrations: [path.join(__dirname, './migrations/*')],
