@@ -18,7 +18,6 @@ const getPosts = async (
     if (cursor) {
         parameters = [...parameters, new Date(parseInt(cursor))];
         cursorIdx = parameters.length;
-
     }
 
     return await dataSource.query(

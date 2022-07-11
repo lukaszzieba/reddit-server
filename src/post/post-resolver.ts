@@ -48,8 +48,6 @@ export class PostResolver {
             req.session.userId
         );
 
-        console.log(req.session.userId)
-
         return {
             posts: posts.slice(0, realLimit),
             hashMore: posts.length > realLimit,
