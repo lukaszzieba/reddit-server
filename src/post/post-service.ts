@@ -89,7 +89,19 @@ const update = (
     text?: string,
     points?: number
 ) => {
-    return Post.update({ id, user: { id: userId } }, { title, text, points });
+    // return Post.update({ id, user: { id: userId } }, { title, text, points });
+
+    return dataSource
+        .createQueryBuilder()
+        .update(Post)
+        .set({
+            title,
+            text,
+            points,
+        })
+        .where('id = :id and user.id = :userId', { id, userId })
+        .returning('*')
+        .execute();
 };
 
 const remove = (id: number, userId: number) => {

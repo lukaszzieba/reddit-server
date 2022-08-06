@@ -17,7 +17,6 @@ import { isAuth } from '../middleware/isAuth';
 import { MyContext } from '@types';
 import { findById } from '@user/user-service';
 import { User } from '@user';
-import { UpdootService } from '@updoot/updoot-service';
 
 @ObjectType()
 class PaginationPosts {
@@ -70,10 +69,10 @@ export class PostResolver {
         return await PostService.create(title, text, user as User);
     }
 
-    @Mutation(() => Post, { nullable: true })
+    @Mutation(() => Post)
     @UseMiddleware(isAuth)
     async updatePost(
-        @Arg('id') id: number,
+        @Arg('id', () => Int) id: number,
         @Arg('title', () => String, { nullable: true }) title: string,
         @Arg('text', () => String, { nullable: true }) text: string,
         @Ctx() { req }: MyContext
