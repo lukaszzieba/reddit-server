@@ -46,6 +46,6 @@ export class Post extends BaseEntity {
     @UpdateDateColumn()
     updatedAt!: Date;
 
-    @OneToMany(() => Updoot, (updoot) => updoot.post)
+    @OneToMany(() => Updoot, (updoot) => updoot.post, { onDelete: 'CASCADE' })
     updoots!: Updoot[];
 }

@@ -11,10 +11,10 @@ export const dataSource = new DataSource({
     port: 5432,
     database: 'reddit',
     synchronize: true,
-    logging: false,
+    logging: true,
     entities: [Post, User, Updoot],
     migrationsTableName: 'migrations',
-    migrations: [path.join(__dirname, './migrations/*')],
+    migrations: [path.join(__dirname, './src/migrations/*')],
 });
 
 export const getQueryBuilder = <T extends EntityTarget<any>>(

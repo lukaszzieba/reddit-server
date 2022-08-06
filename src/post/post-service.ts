@@ -75,19 +75,25 @@ const upVote = async (value: number, postId: number, userId: number) => {
 };
 
 const getOneById = (id: number) => {
-    return Post.findOneBy({ id });
+    return Post.findOne({ where: { id }, relations: ['user'] });
 };
 
 const create = (title: string, text: string, user: User) => {
     return Post.create({ title, text, user }).save();
 };
 
-const update = (id: number, title?: string, text?: string, points?: number) => {
-    return Post.update({ id }, { title, text, points });
+const update = (
+    id: number,
+    userId: number,
+    title?: string,
+    text?: string,
+    points?: number
+) => {
+    return Post.update({ id, user: { id: userId } }, { title, text, points });
 };
 
-const remove = (id: number) => {
-    return Post.delete({ id });
+const remove = (id: number, userId: number) => {
+    return Post.delete({ id, user: { id: userId } });
 };
 
 export const PostService = {

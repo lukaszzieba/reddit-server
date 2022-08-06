@@ -55,7 +55,7 @@ export class PostResolver {
     }
 
     @Query(() => Post, { nullable: true })
-    async post(@Arg('id') id: number) {
+    async post(@Arg('id', () => Int) id: number) {
         return await PostService.getOneById(id);
     }
 
@@ -71,17 +71,27 @@ export class PostResolver {
     }
 
     @Mutation(() => Post, { nullable: true })
-    async updatePOst(
+    @UseMiddleware(isAuth)
+    async updatePost(
         @Arg('id') id: number,
         @Arg('title', () => String, { nullable: true }) title: string,
-        @Arg('text', () => String, { nullable: true }) text: string
+        @Arg('text', () => String, { nullable: true }) text: string,
+        @Ctx() { req }: MyContext
     ) {
-        return await PostService.update(id, title, text);
+        const userId = req.session.userId as number;
+        const updateResult = await PostService.update(id, userId, title, text);
+
+        return updateResult.raw[0];
     }
 
     @Mutation(() => Boolean)
-    async deletePost(@Arg('id') id: number) {
-        await PostService.remove(id);
+    @UseMiddleware(isAuth)
+    async deletePost(
+        @Arg('id', () => Int) id: number,
+        @Ctx() { req }: MyContext
+    ) {
+        const userId = req.session.userId;
+        await PostService.remove(id, userId as number);
 
         return true;
     }
