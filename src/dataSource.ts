@@ -1,20 +1,20 @@
+import 'dotenv-safe/config';
 import { DataSource, EntityTarget } from 'typeorm';
 
 import { User } from '@user';
 import { Post } from '@post';
 import path from 'path';
 import { Updoot } from './updoot/updoot';
+import { isProd } from '@utils';
 
 export const dataSource = new DataSource({
     type: 'postgres',
-    host: 'localhost',
-    port: 5432,
-    database: 'reddit',
-    synchronize: true,
-    logging: true,
+    url: process.env.DATABASE_URL,
+    synchronize: false,
+    logging: !isProd,
     entities: [Post, User, Updoot],
     migrationsTableName: 'migrations',
-    migrations: [path.join(__dirname, './src/migrations/*')],
+    migrations: [path.join(__dirname, './migrations/*')],
 });
 
 export const getQueryBuilder = <T extends EntityTarget<any>>(

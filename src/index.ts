@@ -8,6 +8,7 @@ import Redis from 'ioredis';
 import connectRedis from 'connect-redis';
 import session from 'express-session';
 import cors from 'cors';
+import compression from 'compression';
 
 import { isProd } from '@utils';
 import { MyContext } from '@types';
@@ -21,20 +22,23 @@ import { createUpdootLoader } from '@utils/createVoteStatusLoader';
 
 const main = async () => {
     await dataSource.initialize();
+    await  dataSource.runMigrations();
 
     const app = express();
 
     app.set('trust proxy', !isProd);
 
-    const redis = new Redis();
+    const redis = new Redis(process.env.REDIS_URL as string);
     const redisStore = connectRedis(session);
 
     const whitelist = [
-        'http://localhost:3000',
-        'http://localhost:4000/graphql',
+        process.env.CORS_ORIGIN,
         'https://studio.apollographql.com',
     ];
 
+    app.use(compression());
+
+    app.set('proxy', 1);
     app.use(
         cors({
             origin: function (origin, callback) {
@@ -57,17 +61,18 @@ const main = async () => {
     app.use(
         session({
             name: COOKIE_NAME,
-            store: new redisStore({ client: redis, disableTouch: true }),
+            store: new redisStore({
+                client: redis,
+                disableTouch: true,
+            }),
             cookie: {
                 maxAge: 1000 * 60 * 60 * 24 * 365 * 10,
                 httpOnly: true,
                 sameSite: 'lax',
                 secure: isProd,
-                // sameSite: 'none',
-                // secure: true,
             },
             saveUninitialized: false,
-            secret: 'keyboard cat',
+            secret: process.env.SECRET as string,
             resave: false,
         })
     );
@@ -96,7 +101,7 @@ const main = async () => {
         cors: false,
     });
 
-    app.listen(4000, () => {
+    app.listen(process.env.PORT, () => {
         console.log('Server started on localhost:4000');
     });
 };

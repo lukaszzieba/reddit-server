@@ -2,6 +2,8 @@ dist
 node_modules
 .DS_Store
 .idea/vcs.xml
+.env
+.env.production
 
 # debug
 npm-debug.log*
