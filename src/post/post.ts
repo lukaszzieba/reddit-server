@@ -7,6 +7,7 @@ import {
     UpdateDateColumn,
     ManyToOne,
     OneToMany,
+    RelationId,
 } from 'typeorm';
 import { Field, Int, ObjectType } from 'type-graphql';
 import { User } from '@user';
@@ -21,6 +22,9 @@ export class Post extends BaseEntity {
 
     @Field(() => Int, { nullable: true })
     voteStatus: number | null;
+
+    @RelationId((post: Post) => post.user)
+    public userId: number;
 
     @Field(() => User!)
     @ManyToOne(() => User, (user) => user.posts)

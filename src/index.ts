@@ -1,6 +1,5 @@
 import 'module-alias/register';
 
-
 import express from 'express';
 import { ApolloServer } from 'apollo-server-express';
 import { buildSchema } from 'type-graphql';
@@ -17,6 +16,8 @@ import { COOKIE_NAME } from '@utils/constants';
 import { UserResolver } from '@user';
 import { PostResolver } from '@post';
 import { dataSource } from './dataSource';
+import { createUserLoader } from '@utils/createUserLoader';
+import { createUpdootLoader } from '@utils/createVoteStatusLoader';
 
 const main = async () => {
     await dataSource.initialize();
@@ -80,7 +81,13 @@ const main = async () => {
             resolvers: [PostResolver, UserResolver],
             validate: false,
         }),
-        context: ({ req, res }: MyContext) => ({ req, res, redis }),
+        context: ({ req, res }: MyContext) => ({
+            req,
+            res,
+            redis,
+            userLoader: createUserLoader(),
+            updootLoader: createUpdootLoader(),
+        }),
     });
 
     await apolloServer.start();

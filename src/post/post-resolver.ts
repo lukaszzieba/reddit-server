@@ -15,7 +15,7 @@ import { Post } from '@post';
 import { PostService } from '@post/post-service';
 import { isAuth } from '../middleware/isAuth';
 import { MyContext } from '@types';
-import { findById } from '@user/user-service';
+import * as UserService from '@user/user-service';
 import { User } from '@user';
 
 @ObjectType()
@@ -32,6 +32,30 @@ export class PostResolver {
     @FieldResolver(() => String!)
     textSnippet(@Root() post: Post) {
         return post.text.slice(0, 50);
+    }
+
+    @FieldResolver(() => User!)
+    user(@Root() post: Post, @Ctx() { userLoader }: MyContext) {
+        return userLoader.load(post.userId);
+    }
+
+    @FieldResolver(() => Int, { nullable: true })
+    async voteStatus(
+        @Root() post: Post,
+        @Ctx() { updootLoader, req }: MyContext
+    ) {
+        const userId = req.session.userId as number;
+
+        if (!userId) {
+            return null;
+        }
+
+        const updoot = await updootLoader.load({
+            postId: post.id,
+            userId,
+        });
+
+        return updoot ? updoot.value : null;
     }
 
     @Query(() => PaginationPosts)
@@ -65,7 +89,7 @@ export class PostResolver {
         @Arg('text') text: string,
         @Ctx() { req }: MyContext
     ) {
-        const user = await findById(req.session.userId as number);
+        const user = await UserService.findById(req.session.userId as number);
         return await PostService.create(title, text, user as User);
     }
 

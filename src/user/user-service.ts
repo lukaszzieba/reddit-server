@@ -1,4 +1,5 @@
 import { User } from '@user/user';
+import { In } from 'typeorm';
 
 export const findByUsernameOrEmail = async (
     query: { email: string } | { username: string }
@@ -20,4 +21,8 @@ export const createUser = async (
 
 export const setNewPassword = async (userId: number, password: string) => {
     return await User.update({ id: userId }, { password });
+};
+
+export const getUsersByIds = async (ids: number[]) => {
+    return await User.findBy({ id: In(ids) });
 };

@@ -10,26 +10,15 @@ const getPosts = async (
 ) => {
     let parameters: any = [limit];
 
-    if (userId) {
-        parameters = [...parameters, userId];
-    }
-
-    let cursorIdx = 3;
     if (cursor) {
         parameters = [...parameters, new Date(parseInt(cursor))];
-        cursorIdx = parameters.length;
     }
 
     return await dataSource.query(
         `
-            select p.*, json_build_object('id', u.id , 'username', u.username , 'email', u.email, 'createdAt', u."createdAt", 'updatedAt', u."updatedAt") user,
-            ${
-                userId
-                    ? `(select value from updoot where "userId" = $2 and "postId" = p.id) "voteStatus"`
-                    : 'null as "voteStatus"'
-            }
-            from post p inner join "user" u on p."userId" = u.id
-            ${cursor ? `where p."createdAt" < $${cursorIdx}` : ''}
+            select p.*           
+            from post p
+            ${cursor ? `where p."createdAt" < $2` : ''}
             order by p."createdAt" DESC
             limit $1
     `,
