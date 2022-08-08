@@ -37,8 +37,7 @@ const main = async () => {
     ];
 
     app.use(compression());
-
-    app.set('proxy', 1);
+    app.set('trust proxy', 1);
     app.use(
         cors({
             origin: function (origin, callback) {
