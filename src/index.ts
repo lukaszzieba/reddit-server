@@ -22,7 +22,7 @@ import { createUpdootLoader } from '@utils/createVoteStatusLoader';
 
 const main = async () => {
     await dataSource.initialize();
-    await  dataSource.runMigrations();
+    await dataSource.runMigrations();
 
     const app = express();
 
@@ -69,7 +69,7 @@ const main = async () => {
                 httpOnly: true,
                 sameSite: 'lax',
                 secure: isProd,
-                domain: isProd ? ".finchdev.com " : undefined
+                domain: isProd ? '.finchdev.com ' : undefined,
             },
             saveUninitialized: false,
             secret: process.env.SECRET as string,
